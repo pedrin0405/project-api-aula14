@@ -1,10 +1,10 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { AppService } from './app.service';
+import { CoffeeService } from './coffee.service';
 
 
 @Controller()
-export class AppController {
-  constructor(private readonly appService: AppService) {}
+export class CoffeeController {
+  constructor(private readonly appService: CoffeeService) {}
 
   @Get()
   getHello(): string {

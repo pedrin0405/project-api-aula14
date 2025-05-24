@@ -72,7 +72,7 @@ var cafes = {
 
 
 @Injectable()
-export class AppService {
+export class CoffeeService {
   getCoffeById(id: string): any {
     const coffe = cafes.cafes.find((coffe) => coffe.id === id);
     if (!coffe) {
