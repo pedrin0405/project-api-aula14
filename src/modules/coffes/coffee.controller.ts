@@ -1,23 +1,46 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param
+} from '@nestjs/common';
 import { CoffeeService } from './coffee.service';
+import { CreateCoffeDto } from './create-coffe.dto';
 
-
-@Controller()
+@Controller('coffes')
 export class CoffeeController {
-  constructor(private readonly appService: CoffeeService) {}
+  constructor(private readonly coffeeService: CoffeeService) {}
 
+  // GET /coffes
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  getAll(): any {
+    return this.coffeeService.getCoffes();
   }
 
-  @Get('coffes')
-  getCoffes(): any {
-    return this.appService.getCoffes();
+  // GET /coffes/:id
+  @Get(':id')
+  getById(@Param('id') id: string): any {
+    return this.coffeeService.getCoffeById(id);
   }
-  @Get('coffes/:id/detalhes')
-  getCoffeById(@Param('id') id: string): any {
-    return this.appService.getCoffeById(id);
+
+  // POST /coffe-create
+  @Post('coffe-create')
+  create(@Body() coffeData: CreateCoffeDto): any {
+    return this.coffeeService.createCoffe(coffeData);
   }
-  
+
+  // PUT /coffes/:id
+  @Put(':id')
+  update(@Param('id') id: string, @Body() coffeData: any): any {
+    return this.coffeeService.updateCoffe(id, coffeData);
+  }
+
+  // DELETE /coffes/:id
+  @Delete(':id')
+  delete(@Param('id') id: string): any {
+    return this.coffeeService.deleteCoffe(id);
+  }
 }
