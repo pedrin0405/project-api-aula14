@@ -5,7 +5,8 @@ import {
   Post,
   Put,
   Delete,
-  Param
+  Param,
+  Query
 } from '@nestjs/common';
 import { CoffeeService } from './coffee.service';
 import { CreateCoffeDto } from './create-coffe.dto';
@@ -42,5 +43,14 @@ export class CoffeeController {
   @Delete(':id')
   delete(@Param('id') id: string): any {
     return this.coffeeService.deleteCoffe(id);
+
+  
+  }
+
+  @Get ('/:id/coffee-query-all')
+  coffeeQueryAll(@Query() coffee: CreateCoffeDto, @Param() id: string){
+    // console.log(coffee, id);
+    // { message: 'A data de início não pode ser maior que a data de fim.' }
+    return this.coffeeService.filterCoffesByDate(coffee);
   }
 }

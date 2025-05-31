@@ -1,5 +1,5 @@
 // create-coffe.dto.ts
-import { IsNotEmpty, IsString, IsArray, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsArray, IsOptional, isDate } from 'class-validator';
 
 export class CreateCoffeDto {
   @IsNotEmpty()
@@ -28,4 +28,13 @@ export class CreateCoffeDto {
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
+
+  @IsOptional()
+  data_create?: Date;
+
+  @IsOptional()
+  start_date?: Date;
+
+  @IsOptional()
+  end_date?: Date;
 }
