@@ -1,143 +1,117 @@
 import { Injectable, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
-import { CreateCoffeDto } from './create-coffe.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
-var coffeeDto = {
-  cafes: [
-    {
-      nome: "Paraíso",
-      tipo: "Forte",
-      quantidade: 2,
-      preco: 25.6,
-      id: "22",
-      descricao: "Café encorpado com notas intensas de cacau e aroma marcante.",
-      tags: ["intenso", "cacau", "tradicional"],
-      data_create: "2025-05-30T10:00:00.520Z"
-    },
-    {
-      nome: "Harmonia",
-      tipo: "Suave",
-      quantidade: 1,
-      preco: 18.9,
-      id: "35",
-      descricao: "Café delicado com acidez equilibrada e toques florais.",
-      tags: ["leve", "floral", "adocicado"],
-      data_create: "2025-05-10T10:00:00.520Z"
-    },
-    {
-      nome: "Despertar",
-      tipo: "Extra Forte",
-      quantidade: 3,
-      preco: 32.15,
-      id: "10",
-      descricao: "Blend robusto com alta concentração de cafeína e sabor persistente.",
-      tags: ["forte", "encorpado", "amargo"],
-      data_create: "2025-05-20T10:00:00.520Z"
-    },
-    {
-      nome: "Tropical",
-      tipo: "Aromatizado",
-      quantidade: 1,
-      preco: 28.5,
-      id: "48",
-      descricao: "Café com aroma exótico de frutas tropicais e notas cítricas.",
-      tags: ["frutado", "cítrico", "aromatizado"],
-      data_create: "2025-02-03T10:00:00.520Z"
-    },
-    {
-      nome: "Equilíbrio",
-      tipo: "Médio",
-      quantidade: 2,
-      preco: 22.75,
-      id: "52",
-      descricao: "Café balanceado com corpo presente e notas suaves de caramelo.",
-      tags: ["equilibrado", "caramelo", "clássico"],
-      data_create: "2025-04-30T10:00:00.520Z"
-    }
-  ]
-};
+export class CreateCoffeeDto {
+  nome: string;
+  tipo: string;
+  precoUnitario?: number;
+  descricao?: string;
+  tags?: string[];
+  startDate?: Date;
+  endDate?: Date;
+}
 
 @Injectable()
 export class CoffeeService {
-  getCoffeById(id: string): any {
-    const coffe = coffeeDto.cafes.find((coffe) => coffe.id === id);
-    if (!coffe) {
-      return { message: 'Café não encontrado' };
+  constructor(private prisma: PrismaService) {}
+
+  async getCoffeeById(id: number): Promise<any> {
+    const coffee = await this.prisma.cafe.findUnique({
+      where: { id: id },
+    });
+    if (!coffee) {
+      throw new HttpException('Café não encontrado', HttpStatus.NOT_FOUND);
     }
-    return coffe;
+    return coffee;
   }
 
   getHello(): string {
     return 'Hello World!';
   }
 
-  getCoffes(): any {
-    return coffeeDto;
+  async getCoffees(): Promise<any[]> {
+    return this.prisma.cafe.findMany();
   }
 
-  updateCoffe(id: string, coffeData: any): any {
-    const coffeIndex = coffeeDto.cafes.findIndex((coffe) => coffe.id === id);
-    if (coffeIndex === -1) {
-      return { message: 'Café não encontrado' };
-    }
-    coffeeDto.cafes[coffeIndex] = { ...coffeeDto.cafes[coffeIndex], ...coffeData };
-    return coffeeDto.cafes[coffeIndex];
-  }
-
-  deleteCoffe(id: string): any {
-    const coffeIndex = coffeeDto.cafes.findIndex((coffe) => coffe.id === id);
-    if (coffeIndex === -1) {
-      return { message: 'Café não encontrado' };
-    }
-    coffeeDto.cafes.splice(coffeIndex, 1);
-    return { message: 'Café deletado com sucesso' };
-  }
-
-  createCoffe(coffeData: any): any {
-    const { id, nome, tipo } = coffeData;
-
-    // Validação dos campos obrigatórios
-    if (!id || !nome || !tipo) {
-      throw new HttpException(
-        { message: 'Dados inválidos ou ID já existente.' },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    // Verifica se o ID já existe
-    const idExists = coffeeDto.cafes.some(coffe => coffe.id === id);
-    if (idExists) {
-      throw new HttpException(
-        { message: 'Dados inválidos ou ID já existente.' },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    // Adiciona o novo café completo, mantendo todas as propriedades
-    coffeeDto.cafes.push(coffeData);
-
-    // Retorna o novo café com status 201 Created
-    return {
-      statusCode: HttpStatus.CREATED,
-      data: coffeData,
-    };
-  }
-
-  filterCoffesByDate(coffee: CreateCoffeDto): any {
-    const startDate = new Date(coffee.start_date);
-    const endDate = new Date(coffee.end_date);
-    if (startDate && endDate) {
-      
-      if (startDate > endDate) {
-        return new BadRequestException({ cause: 'A data de início não pode ser maior que a data de fim.', description: 'Não é possível filtrar os cafés.' });
+  async updateCoffee(id: number, coffeeData: Prisma.CafeUpdateInput): Promise<any> {
+    try {
+      const updatedCoffee = await this.prisma.cafe.update({
+        where: { id: id },
+        data: coffeeData,
+      });
+      return updatedCoffee;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new HttpException('Café não encontrado', HttpStatus.NOT_FOUND);
+        }
       }
-      
-    const filteredCoffes = coffeeDto.cafes.filter(coffe => {
-      const coffeeDate = new Date(coffe.data_create);
-      return coffeeDate >= startDate && coffeeDate <= endDate;
-    });
-    
-    return filteredCoffes;
+      throw error;
+    }
+  }
+
+  async deleteCoffee(id: number): Promise<{ message: string }> {
+    try {
+      await this.prisma.cafe.delete({
+        where: { id: id },
+      });
+      return { message: 'Café deletado com sucesso' };
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new HttpException('Café não encontrado', HttpStatus.NOT_FOUND);
+        }
+      }
+      throw error;
+    }
+  }
+
+  async createCoffee(coffeeData: Prisma.CafeCreateInput): Promise<any> {
+    if (!coffeeData.nome || !coffeeData.tipo) {
+      throw new BadRequestException('Dados inválidos: nome e tipo são obrigatórios.');
     }
 
+    try {
+      const newCoffee = await this.prisma.cafe.create({
+        data: {
+          ...coffeeData,
+        },
+      });
+      return {
+        statusCode: HttpStatus.CREATED,
+        data: newCoffee,
+      };
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new HttpException('Nome do café ou outro campo único já existente.', HttpStatus.CONFLICT);
+        }
+      }
+      throw error;
+    }
+  }
+
+  async filterCoffeesByDate(filterDto: CreateCoffeeDto): Promise<any[]> {
+    const startDate = filterDto.startDate;
+    const endDate = filterDto.endDate;
+
+    if (!startDate || !endDate) {
+      throw new BadRequestException('As datas de início e fim são obrigatórias para filtrar por data.');
+    }
+
+    if (startDate > endDate) {
+      throw new BadRequestException({ cause: 'A data de início não pode ser maior que a data de fim.', description: 'Não é possível filtrar os cafés.' });
+    }
+
+    const filteredCoffees = await this.prisma.cafe.findMany({
+      where: {
+        data_created: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+    return filteredCoffees;
   }
 }

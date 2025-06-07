@@ -6,51 +6,43 @@ import {
   Put,
   Delete,
   Param,
-  Query
+  Query,
+  ParseIntPipe
 } from '@nestjs/common';
 import { CoffeeService } from './coffee.service';
-import { CreateCoffeDto } from './create-coffe.dto';
+import { CreateCoffeeDto } from './create-coffe.dto';
 
-@Controller('coffes')
+@Controller('coffees')
 export class CoffeeController {
   constructor(private readonly coffeeService: CoffeeService) {}
 
-  // GET /coffes
   @Get()
-  getAll(): any {
-    return this.coffeeService.getCoffes();
+  getAll() {
+    return this.coffeeService.getCoffees();
   }
 
-  // GET /coffes/:id
   @Get(':id')
-  getById(@Param('id') id: string): any {
-    return this.coffeeService.getCoffeById(id);
+  getById(@Param('id', ParseIntPipe) id: number) {
+    return this.coffeeService.getCoffeeById(id);
   }
 
-  // POST /coffe-create
-  @Post('coffe-create')
-  create(@Body() coffeData: CreateCoffeDto): any {
-    return this.coffeeService.createCoffe(coffeData);
+  @Post('create')
+  create(@Body() coffeeData: CreateCoffeeDto) {
+    return this.coffeeService.createCoffee(coffeeData);
   }
 
-  // PUT /coffes/:id
   @Put(':id')
-  update(@Param('id') id: string, @Body() coffeData: any): any {
-    return this.coffeeService.updateCoffe(id, coffeData);
+  update(@Param('id', ParseIntPipe) id: number, @Body() coffeeData: any) {
+    return this.coffeeService.updateCoffee(id, coffeeData);
   }
 
-  // DELETE /coffes/:id
   @Delete(':id')
-  delete(@Param('id') id: string): any {
-    return this.coffeeService.deleteCoffe(id);
-
-  
+  delete(@Param('id', ParseIntPipe) id: number) {
+    return this.coffeeService.deleteCoffee(id);
   }
 
-  @Get ('/:id/coffee-query-all')
-  coffeeQueryAll(@Query() coffee: CreateCoffeDto, @Param() id: string){
-    // console.log(coffee, id);
-    // { message: 'A data de início não pode ser maior que a data de fim.' }
-    return this.coffeeService.filterCoffesByDate(coffee);
+  @Get('query-by-date') 
+  filterByDate(@Query() filterDto: CreateCoffeeDto) {
+    return this.coffeeService.filterCoffeesByDate(filterDto);
   }
 }

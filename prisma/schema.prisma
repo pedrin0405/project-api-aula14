@@ -6,10 +6,77 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Cliente {
+  id                    Int             @id @default(autoincrement())
+  nome                  String
+  email                 String          @unique 
+  cpf                   String          @unique 
+  telefone              String
+  pedidos               Pedido[]
+}
+
+model Cafe {
+  id                    Int             @id @default(autoincrement())
+  nome                  String
+  tipo                  tiposCafe       @default(FORTE) 
+  precoUnitario         Float           @map("preco_unitario") 
+  descricao             String?       
+  tags                  String[]      
+  itensPedido           ItemPedido[]
+  data_created          DateTime        @default(now()) @map("data_created")
+  data_updated          DateTime?       @updatedAt @map("data_updated")
+}
+
+enum tiposCafe {
+  FORTE
+  SUAVE
+  ESPECIAL
+}
+
+model Pedido {
+  id                    Int               @id @default(autoincrement())
+  clienteId             Int
+  cliente               Cliente           @relation(fields: [clienteId], references: [id])
+  dataPedido            DateTime          @default(now()) @map("data_pedido") 
+  totalPedido           Float?            @map("total_pedido") 
+  status                StatusEntrega     @default(PENDENTE)
+  entrega               Entrega?     
+  itensPedido           ItemPedido[] 
+}
+
+enum StatusEntrega {
+  PENDENTE
+  EM_TRANSITO
+  ENTREGUE
+  CANCELADO 
+}
+
+model ItemPedido {
+  id                    Int              @id @default(autoincrement())
+  cafeId                Int
+  cafe                  Cafe             @relation(fields: [cafeId], references: [id]) 
+  pedidoId              Int
+  pedido                Pedido           @relation(fields: [pedidoId], references: [id]) 
+  quantidade            Int
+  precoUnitario         Float            @map("preco_unitario") 
+}
+
+model Entrega {
+  id                    Int              @id @default(autoincrement())
+  pedidoId              Int              @unique 
+  pedido                Pedido           @relation(fields: [pedidoId], references: [id]) 
+  enderecoEntrega       String           @map("endereco_entrega")
+  status                StatusEntrega 
+  dataPrevistaEntrega   DateTime?        @map("data_prevista_entrega") 
+}
+
+
+
+
